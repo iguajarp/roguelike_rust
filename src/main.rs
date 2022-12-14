@@ -1,10 +1,11 @@
-use rltk::{GameState, Rltk, RGB, VirtualKeyCode}; // extern is an old keyword, not needed now
+use rltk::{GameState, Rltk, VirtualKeyCode, RGB}; // extern is an old keyword, not needed now
 use specs::prelude::*; // macro_use is an old keyword too. Not needed anymore
-use std::cmp::{max, min};
 use specs_derive::Component;
+use std::cmp::{max, min};
 
 #[derive(Component)] // The #[macro_use] use specs_derive::Component; earliers versions
-struct Position { // Just a POD, plain old data, is common for pure ECS. No logic
+struct Position {
+    // Just a POD, plain old data, is common for pure ECS. No logic
     x: i32,
     y: i32,
 }
@@ -16,7 +17,9 @@ struct Renderable {
     bg: RGB,
 }
 
-struct State {}
+struct State {
+    ecs: World,
+}
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.cls();
@@ -30,6 +33,31 @@ fn main() -> rltk::BError {
         .with_title("Roguelike Tutorial")
         .build()?;
 
-    let gs = State{};
+    let mut gs = State { ecs: World::new() };
+    gs.ecs.register::<Position>();
+    gs.ecs.register::<Renderable>();
+
+    gs.ecs
+        .create_entity()
+        .with(Position { x: 40, y: 25 })
+        .with(Renderable {
+            glyph: rltk::to_cp437('@'),
+            fg: RGB::named(rltk::YELLOW),
+            bg: RGB::named(rltk::BLACK),
+        })
+        .build(); // .build() takes the assembled entity and does the hard part - actually putting together all of the disparate parts into the right parts of the ECS for you.
+
+        for i in 0..10 {
+            gs.ecs
+            .create_entity()
+            .with(Position { x: i * 7, y: 20 })
+            .with(Renderable {
+                glyph: rltk::to_cp437('☺'),
+                fg: RGB::named(rltk::RED),
+                bg: RGB::named(rltk::BLACK),
+            })
+            .build();
+        }
+
     rltk::main_loop(context, gs)
 }
