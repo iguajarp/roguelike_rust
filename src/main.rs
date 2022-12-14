@@ -35,6 +35,9 @@ impl GameState for State {
     }
 }
 
+#[derive(Component)] // tag component
+struct LeftMover {}
+
 fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
@@ -44,6 +47,7 @@ fn main() -> rltk::BError {
     let mut gs = State { ecs: World::new() };
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
+    gs.ecs.register::<LeftMover>();
 
     gs.ecs
         .create_entity()
@@ -65,6 +69,7 @@ fn main() -> rltk::BError {
                 fg: RGB::named(rltk::RED),
                 bg: RGB::named(rltk::BLACK),
             })
+            .with(LeftMover {})
             .build();
         }
 
