@@ -170,11 +170,14 @@ fn main() -> rltk::BError {
     // add a new resource to the ecs. It's a shared data that can be used.
     // The map is now available from anywhere the ECS can see! Now inside your code,
     // you can access the map with the rather unwieldy let map = self.ecs.get_mut::<Vec<TileType>>();
-    gs.ecs.insert(new_map_rooms_and_corridors());
+    let (rooms, map) = new_map_rooms_and_corridors();
+    gs.ecs.insert(map);
+
+    let (player_x, player_y) = rooms[0].center();
 
     gs.ecs
         .create_entity()
-        .with(Position { x: 40, y: 25 })
+        .with(Position { x: player_x, y: player_y })
         .with(Renderable {
             glyph: rltk::to_cp437('@'),
             fg: RGB::named(rltk::YELLOW),

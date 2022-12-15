@@ -36,7 +36,7 @@ pub fn new_map_test() -> Vec<TileType> {
     map
 }
 
-pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
+pub fn new_map_rooms_and_corridors() -> (Vec<Rect>, Vec<TileType>) {
     let mut map = vec![TileType::Wall; 80 * 50];
 
     let mut rooms: Vec<Rect> = Vec::new();
@@ -63,11 +63,28 @@ pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
         }
         if ok {
             apply_room_to_map(&new_room, &mut map);
+
+            if !rooms.is_empty() {
+                let (new_x, new_y) = new_room.center();
+
+                // rooms.len() - 1. Last room added.
+                let (prev_x, prev_y) = rooms[rooms.len() - 1].center();
+
+                // Connect the last room with the new one. Using horizontal and vertical tunnels
+                if rng.range(0, 2) == 1 {
+                    apply_horizontal_tunnel(&mut map, prev_x, new_x, prev_y);
+                    apply_vertical_tunnel(&mut map, prev_y, new_y, new_x);
+                } else {
+                    apply_vertical_tunnel(&mut map, prev_y, new_y, prev_x);
+                    apply_horizontal_tunnel(&mut map, prev_x, new_x, new_y);
+                }
+            }
+
             rooms.push(new_room);
         }
     }
 
-    map
+    (rooms, map)
 }
 
 fn apply_room_to_map(room: &Rect, map: &mut [TileType]) {
