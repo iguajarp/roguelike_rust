@@ -35,7 +35,7 @@ struct State {
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.cls();
-        
+
         player_input(self, ctx);
         self.run_systems();
 
@@ -80,7 +80,7 @@ impl<'a> System<'a> for LeftWalker {
 }
 
 #[derive(Component, Debug)]
-struct Player {}
+pub struct Player {}
 
 fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();
@@ -122,48 +122,43 @@ fn player_input(gs: &mut State, ctx: &mut Rltk) {
 
 // &[TileType] allows to receive a slices. And receive them as a reference.
 fn draw_map(ecs: &World, ctx: &mut Rltk) {
-    let mut viewsheds = ecs.write_storage::<Viewshed>();
-    let mut players = ecs.write_storage::<Player>();
     let map = ecs.fetch::<Map>();
+    let mut y = 0;
+    let mut x = 0;
 
-    for (_player, viewshed) in (&mut players, &mut viewsheds).join() {
-        let mut y = 0;
-        let mut x = 0;
+    // Render the tile depending upon the tile type
+    for (idx, tile) in map.tiles.iter().enumerate() {
 
-        // Render the tile depending upon the tile type
-        for tile in map.tiles.iter() {
-            let pt = Point::new(x, y);
-
-            // We have the visible tiles from the system, so we check if each tile is present on the
-            // in the Vecs of Point that are visible. If yes, render them.
-            if viewshed.visible_tiles.contains(&pt) {
-                match tile {
-                    TileType::Floor => ctx.set(
+        // We have the visible tiles from the system, so we check if each tile already revealed
+        // The visible system, check if the tile is revealed to the view, then change the
+        // revealed_tiles to true. Now we check every tile, if it has true as revealed, draw it.
+        if map.revealed_tiles[idx] {
+            match tile {
+                TileType::Floor => ctx.set(
+                    x,
+                    y,
+                    RGB::from_f32(0.5, 0.5, 0.5),
+                    RGB::from_f32(0., 0., 0.),
+                    rltk::to_cp437('.'),
+                ),
+                TileType::Wall => {
+                    ctx.set(
                         x,
                         y,
-                        RGB::from_f32(0.5, 0.5, 0.5),
+                        RGB::from_f32(0.0, 1.0, 0.0),
                         RGB::from_f32(0., 0., 0.),
-                        rltk::to_cp437('.'),
-                    ),
-                    TileType::Wall => {
-                        ctx.set(
-                            x,
-                            y,
-                            RGB::from_f32(0.0, 1.0, 0.0),
-                            RGB::from_f32(0., 0., 0.),
-                            rltk::to_cp437('#'),
-                        );
-                    }
+                        rltk::to_cp437('#'),
+                    );
                 }
             }
+        }
 
-            // Move the coordinates
-            // Needed to work with index instead of vector(x, y)
-            x += 1;
-            if x > 79 {
-                x = 0;
-                y += 1;
-            }
+        // Move the coordinates
+        // Needed to work with index instead of vector(x, y)
+        x += 1;
+        if x > 79 {
+            x = 0;
+            y += 1;
         }
     }
 }
