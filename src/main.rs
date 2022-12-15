@@ -2,6 +2,7 @@ use rltk::{GameState, Rltk, Tile, VirtualKeyCode, RGB}; // extern is an old keyw
 use specs::prelude::*; // macro_use is an old keyword too. Not needed anymore
 use specs_derive::Component;
 use std::cmp::{max, min};
+mod map;
 
 #[derive(Component)] // The #[macro_use] use specs_derive::Component; earliers versions
 struct Position {
@@ -104,7 +105,7 @@ fn player_input(gs: &mut State, ctx: &mut Rltk) {
 // Clone override the default move behavior on assignment
 // PartialEq allows == . Ex: tile_type == TileType::Wall
 #[derive(PartialEq, Copy, Clone)]
-enum TileType {
+pub enum TileType {
     Wall,
     Floor,
 }
@@ -114,41 +115,6 @@ pub fn xy_idx(x: i32, y: i32) -> usize {
     (y as usize * 80) + x as usize
 }
 
-/// It defines a map using a Vec<TileType>. So, it doesn't use cartesanian coor.
-/// But index from 0 to the area of the map.
-/// It places walls around the outer edges of the map, and then adds 400 random
-/// walls anywhere that isn't the player's starting point.
-fn new_map() -> Vec<TileType> {
-    let mut map = vec![TileType::Floor; 80 * 50];
-
-    // Make the boundaries walls at the borders of the map
-    for x in 0..80 {
-        map[xy_idx(x, 0)] = TileType::Wall;
-        map[xy_idx(x, 49)] = TileType::Wall;
-    }
-
-    for y in 0..50 {
-        map[xy_idx(0, y)] = TileType::Wall;
-        map[xy_idx(79, y)] = TileType::Wall;
-    }
-
-    // Now we'll randomly splat a bunch of walls. It won't be pretty, but it's a decent illustration.
-    // First, obtain the thread-local RNG:
-    let mut rng = rltk::RandomNumberGenerator::new();
-
-    for _i in 0..400 {
-        let x = rng.roll_dice(1, 79);
-        let y = rng.roll_dice(1, 49);
-        let idx = xy_idx(x, y);
-
-        // Checks if the random position is at the center, if not, make the wall.
-        if idx != xy_idx(40, 25) {
-            map[idx] = TileType::Wall;
-        }
-    }
-
-    map
-}
 
 // &[TileType] allows to receive a slices. And receive them as a reference.
 fn draw_map(map: &[TileType], ctx: &mut Rltk) {
@@ -201,7 +167,7 @@ fn main() -> rltk::BError {
     // add a new resource to the ecs. It's a shared data that can be used.
     // The map is now available from anywhere the ECS can see! Now inside your code,
     // you can access the map with the rather unwieldy let map = self.ecs.get_mut::<Vec<TileType>>();
-    gs.ecs.insert(new_map());
+    gs.ecs.insert(map::new_map_rooms_and_corridors());
 
     gs.ecs
         .create_entity()
