@@ -2,7 +2,10 @@ use rltk::{GameState, Rltk, Tile, VirtualKeyCode, RGB}; // extern is an old keyw
 use specs::prelude::*; // macro_use is an old keyword too. Not needed anymore
 use specs_derive::Component;
 use std::cmp::{max, min};
+
+use crate::map::new_map_rooms_and_corridors;
 mod map;
+mod rect;
 
 #[derive(Component)] // The #[macro_use] use specs_derive::Component; earliers versions
 struct Position {
@@ -167,7 +170,7 @@ fn main() -> rltk::BError {
     // add a new resource to the ecs. It's a shared data that can be used.
     // The map is now available from anywhere the ECS can see! Now inside your code,
     // you can access the map with the rather unwieldy let map = self.ecs.get_mut::<Vec<TileType>>();
-    gs.ecs.insert(map::new_map_rooms_and_corridors());
+    gs.ecs.insert(new_map_rooms_and_corridors());
 
     gs.ecs
         .create_entity()
