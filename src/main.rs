@@ -102,14 +102,19 @@ enum TileType {
     Floor,
 }
 
+/// Get the index from the map. From 0 to 80*50 in a map of that size
 pub fn xy_idx(x: i32, y: i32) -> usize {
     (y as usize * 80) + x as usize
 }
 
+/// It defines a map using a Vec<TileType>. So, it doesn't use cartesanian coor.
+/// But index from 0 to the area of the map.
+/// It places walls around the outer edges of the map, and then adds 400 random
+/// walls anywhere that isn't the player's starting point.
 fn new_map() -> Vec<TileType> {
     let mut map = vec![TileType::Floor; 80*50];
 
-    // Make the boundaries walls
+    // Make the boundaries walls at the borders of the map
     for x in 0..80 {
         map[xy_idx(x, 0)] = TileType::Wall;
         map[xy_idx(x, 49)] = TileType::Wall;
@@ -126,8 +131,10 @@ fn new_map() -> Vec<TileType> {
 
     for _i in 0..400 {
         let x = rng.roll_dice(1, 79);
-        let y = rng.roll_dice(1, 79);
+        let y = rng.roll_dice(1, 49);
         let idx = xy_idx(x, y);
+
+        // Checks if the random position is at the center, if not, make the wall.
         if idx != xy_idx(40, 25) {
             map[idx] = TileType::Wall;
         }
@@ -147,6 +154,11 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<LeftMover>();
     gs.ecs.register::<Player>();
+
+    // add a new resource to the ecs. It's a shared data that can be used.
+    // The map is now available from anywhere the ECS can see! Now inside your code,
+    // you can access the map with the rather unwieldy let map = self.ecs.get_mut::<Vec<TileType>>();
+    gs.ecs.insert(new_map());
 
     gs.ecs
         .create_entity()
