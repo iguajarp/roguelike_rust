@@ -189,7 +189,7 @@ fn draw_map(map: &[TileType], ctx: &mut Rltk) {
 fn main() -> rltk::BError {
     use rltk::RltkBuilder;
     let context = RltkBuilder::simple80x50()
-        .with_title("Roguelike Tutorial")
+        .with_title("Roguelike Rust")
         .build()?;
 
     let mut gs = State { ecs: World::new() };
@@ -213,20 +213,6 @@ fn main() -> rltk::BError {
         })
         .with(Player {})
         .build(); // .build() takes the assembled entity and does the hard part - actually putting together all of the disparate parts into the right parts of the ECS for you.
-
-    // The 0..10  is a range - and offers an iterator for Rust to navigate
-    for i in 0..10 {
-        gs.ecs
-            .create_entity()
-            .with(Position { x: i * 7, y: 20 })
-            .with(Renderable {
-                glyph: rltk::to_cp437('☺'),
-                fg: RGB::named(rltk::RED),
-                bg: RGB::named(rltk::BLACK),
-            })
-            .with(LeftMover {})
-            .build();
-    }
 
     rltk::main_loop(context, gs)
 }
