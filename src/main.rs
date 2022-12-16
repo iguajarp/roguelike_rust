@@ -85,13 +85,16 @@ pub struct Player {}
 fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let mut positions = ecs.write_storage::<Position>();
     let mut players = ecs.write_storage::<Player>();
+    let mut viewsheds = ecs.write_storage::<Viewshed>();
     let map = ecs.fetch::<Map>();
 
-    for (_player, pos) in (&mut players, &mut positions).join() {
+    for (_player, pos, viewshed) in (&mut players, &mut positions, &mut viewsheds).join() {
         let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
         if map.tiles[destination_idx] != TileType::Wall {
             pos.x = min(79, max(0, pos.x + delta_x));
             pos.y = min(49, max(0, pos.y + delta_y));
+
+            viewshed.dirty = true;
         }
     }
 }
@@ -123,34 +126,33 @@ fn player_input(gs: &mut State, ctx: &mut Rltk) {
 // &[TileType] allows to receive a slices. And receive them as a reference.
 fn draw_map(ecs: &World, ctx: &mut Rltk) {
     let map = ecs.fetch::<Map>();
+
     let mut y = 0;
     let mut x = 0;
 
     // Render the tile depending upon the tile type
     for (idx, tile) in map.tiles.iter().enumerate() {
-
         // We have the visible tiles from the system, so we check if each tile already revealed
         // The visible system, check if the tile is revealed to the view, then change the
         // revealed_tiles to true. Now we check every tile, if it has true as revealed, draw it.
         if map.revealed_tiles[idx] {
+            let glyph;
+            let mut fg;
             match tile {
-                TileType::Floor => ctx.set(
-                    x,
-                    y,
-                    RGB::from_f32(0.5, 0.5, 0.5),
-                    RGB::from_f32(0., 0., 0.),
-                    rltk::to_cp437('.'),
-                ),
+                TileType::Floor => {
+                    glyph = rltk::to_cp437('.');
+                    fg = RGB::from_f32(0.5, 0.5, 0.5);
+                }
                 TileType::Wall => {
-                    ctx.set(
-                        x,
-                        y,
-                        RGB::from_f32(0.0, 1.0, 0.0),
-                        RGB::from_f32(0., 0., 0.),
-                        rltk::to_cp437('#'),
-                    );
+                    fg = RGB::from_f32(0.0, 1.0, 0.0);
+                    glyph = rltk::to_cp437('#');
                 }
             }
+            // if player is not looking the tile, set it grey
+            if !map.visible_tiles[idx] {
+                fg = fg.to_greyscale();
+            }
+            ctx.set(x, y, fg, RGB::from_f32(0., 0., 0.), glyph);
         }
 
         // Move the coordinates
@@ -199,6 +201,7 @@ fn main() -> rltk::BError {
         .with(Viewshed {
             visible_tiles: Vec::new(),
             range: 8,
+            dirty: true,
         })
         .build(); // .build() takes the assembled entity and does the hard part - actually putting together all of the disparate parts into the right parts of the ECS for you.
 

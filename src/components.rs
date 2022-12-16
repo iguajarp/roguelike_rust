@@ -7,6 +7,7 @@ use specs::prelude::*;
 pub struct Viewshed {
     pub visible_tiles: Vec<rltk::Point>,
     pub range: i32,
+    pub dirty: bool,
 }
 
 #[derive(Component)] // The #[macro_use] use specs_derive::Component; earliers versions
