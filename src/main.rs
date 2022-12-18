@@ -43,11 +43,15 @@ impl GameState for State {
 
         let positions = self.ecs.read_storage::<Position>();
         let renderables = self.ecs.read_storage::<Renderable>();
+        let map = self.ecs.fetch::<Map>();
 
         // You need a Position to know where to draw, and Renderable to know what to draw!
         // Join return only entities that have both, like a db INNER JOIN. Works with tuples
         for (pos, render) in (&positions, &renderables).join() {
-            ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
+            let idx = map.xy_idx(pos.x, pos.y);
+            if map.visible_tiles[idx] {
+                ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
+            }
         }
     }
 }
@@ -183,8 +187,26 @@ fn main() -> rltk::BError {
     // you can access the map with the rather unwieldy let map = self.ecs.get_mut::<Vec<TileType>>();
     let map: Map = map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
+    
+    for room in map.rooms.iter().skip(1) {
+        let (x, y) = room.center();
+        gs.ecs.create_entity()
+            .with(Position {x, y})
+            .with(Renderable {
+                glyph: rltk::to_cp437('g'),
+                fg: RGB::named(rltk::RED),
+                bg: RGB::named(rltk::BLACK),
+            })
+            .with(Viewshed {
+                visible_tiles: Vec::new(),
+                range: 8,
+                dirty: true,
+            })
+            .build();
+    }
 
     gs.ecs.insert(map);
+
 
     gs.ecs
         .create_entity()
@@ -204,6 +226,7 @@ fn main() -> rltk::BError {
             dirty: true,
         })
         .build(); // .build() takes the assembled entity and does the hard part - actually putting together all of the disparate parts into the right parts of the ECS for you.
+
 
     rltk::main_loop(context, gs)
 }
