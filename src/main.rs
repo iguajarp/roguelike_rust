@@ -1,9 +1,11 @@
 use rltk::{GameState, Point, Rltk, RGB}; // extern is an old keyword, not needed now
 use specs::prelude::*; // macro_use is an old keyword too. Not needed anymore
 
-
 mod components;
 pub use components::*;
+
+mod map_indexing_system;
+pub use map_indexing_system::MapIndexingSystem;
 
 mod map;
 pub use map::*; // re-export the item and also import
@@ -19,7 +21,6 @@ use visibility_system::VisibilitySystem;
 
 mod monster_ai_system;
 use monster_ai_system::MonsterAI;
-
 
 pub struct State {
     pub ecs: World,
@@ -59,11 +60,12 @@ impl State {
         let mut vis = VisibilitySystem {};
         vis.run_now(&self.ecs);
         let mut mob = MonsterAI {};
+        let mut mapindex = MapIndexingSystem {};
+        mapindex.run_now(&self.ecs);
         mob.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
-
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
@@ -88,6 +90,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Viewshed>();
     gs.ecs.register::<Monster>();
     gs.ecs.register::<Name>();
+    gs.ecs.register::<BlocksTile>();
 
     // add a new resource to the ecs. It's a shared data that can be used.
     // The map is now available from anywhere the ECS can see! Now inside your code,
@@ -130,6 +133,7 @@ fn main() -> rltk::BError {
             .with(Name {
                 name: format!("{} #{}", &name, i),
             })
+            .with(BlocksTile {})
             .build();
     }
 

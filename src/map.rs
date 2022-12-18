@@ -18,6 +18,7 @@ pub struct Map {
     pub height: i32,
     pub revealed_tiles: Vec<bool>,
     pub visible_tiles: Vec<bool>,
+    pub blocked: Vec<bool>,
 }
 
 impl Map {
@@ -58,7 +59,13 @@ impl Map {
             return false;
         }
         let idx = self.xy_idx(x, y);
-        self.tiles[idx as usize] != TileType::Wall
+        !self.blocked[idx]
+    }
+
+    pub fn populate_blocked(&mut self) {
+        for (i, tile) in self.tiles.iter().enumerate() {
+            self.blocked[i] = *tile == TileType::Wall;
+        }
     }
 }
 
@@ -116,6 +123,7 @@ pub fn new_map_rooms_and_corridors() -> Map {
         height: 50,
         revealed_tiles: vec![false; 80 * 50],
         visible_tiles: vec![false; 80 * 50],
+        blocked: vec![false; 80 * 50],
     };
 
     const MAX_ROOMS: i32 = 30;
