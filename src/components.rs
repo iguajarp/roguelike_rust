@@ -23,3 +23,11 @@ struct Renderable {
     fg: RGB,
     bg: RGB,
 }
+
+#[derive(Component, Debug)]
+pub struct Monster {}
+
+#[derive(Component, Debug)]
+pub struct Name {
+    pub name : String
+}
