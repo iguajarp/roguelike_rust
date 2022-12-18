@@ -11,17 +11,17 @@ pub struct Viewshed {
 }
 
 #[derive(Component)] // The #[macro_use] use specs_derive::Component; earliers versions
-struct Position {
+pub struct Position {
     // Just a POD, plain old data, is common for pure ECS. No logic
-    x: i32,
-    y: i32,
+    pub x: i32,
+    pub y: i32,
 }
 
 #[derive(Component)]
-struct Renderable {
-    glyph: rltk::FontCharType,
-    fg: RGB,
-    bg: RGB,
+pub struct Renderable {
+    pub glyph: rltk::FontCharType,
+    pub fg: RGB,
+    pub bg: RGB,
 }
 
 #[derive(Component, Debug)]
@@ -31,3 +31,7 @@ pub struct Monster {}
 pub struct Name {
     pub name : String
 }
+
+
+#[derive(Component, Debug)]
+pub struct Player {}

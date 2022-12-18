@@ -1,8 +1,8 @@
 use crate::Player;
 
-use super::{Map, Position, Viewshed};
+use super::{Map, Viewshed, Position};
 use rltk::{field_of_view, Point};
-use specs::{prelude::*, storage::GenericReadStorage};
+use specs::{prelude::*};
 
 pub struct VisibilitySystem {}
 

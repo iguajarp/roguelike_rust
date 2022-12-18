@@ -127,3 +127,45 @@ pub fn new_map_rooms_and_corridors() -> Map {
 
     map
 }
+
+// &[TileType] allows to receive a slices. And receive them as a reference.
+pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
+    let map = ecs.fetch::<Map>();
+
+    let mut y = 0;
+    let mut x = 0;
+
+    // Render the tile depending upon the tile type
+    for (idx, tile) in map.tiles.iter().enumerate() {
+        // We have the visible tiles from the system, so we check if each tile already revealed
+        // The visible system, check if the tile is revealed to the view, then change the
+        // revealed_tiles to true. Now we check every tile, if it has true as revealed, draw it.
+        if map.revealed_tiles[idx] {
+            let glyph;
+            let mut fg;
+            match tile {
+                TileType::Floor => {
+                    glyph = rltk::to_cp437('.');
+                    fg = RGB::from_f32(0.5, 0.5, 0.5);
+                }
+                TileType::Wall => {
+                    fg = RGB::from_f32(0.0, 1.0, 0.0);
+                    glyph = rltk::to_cp437('#');
+                }
+            }
+            // if player is not looking the tile, set it grey
+            if !map.visible_tiles[idx] {
+                fg = fg.to_greyscale();
+            }
+            ctx.set(x, y, fg, RGB::from_f32(0., 0., 0.), glyph);
+        }
+
+        // Move the coordinates
+        // Needed to work with index instead of vector(x, y)
+        x += 1;
+        if x > 79 {
+            x = 0;
+            y += 1;
+        }
+    }
+}
