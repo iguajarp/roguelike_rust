@@ -100,10 +100,24 @@ impl BaseMap for Map {
             exits.push((idx + w, 1.0))
         };
 
+        // diagonals
+        if self.is_exit_valid(x - 1, y - 1) {
+            exits.push(((idx - w) - 1, 1.45));
+        }
+        if self.is_exit_valid(x + 1, y - 1) {
+            exits.push(((idx - w) + 1, 1.45));
+        }
+        if self.is_exit_valid(x - 1, y + 1) {
+            exits.push(((idx + w) - 1, 1.45));
+        }
+        if self.is_exit_valid(x + 1, y + 1) {
+            exits.push(((idx + w) + 1, 1.45));
+        }
+
         exits
     }
 
-    fn get_pathing_distance(&self, idx1:usize, idx2:usize) -> f32 {
+    fn get_pathing_distance(&self, idx1: usize, idx2: usize) -> f32 {
         let w = self.width as usize;
         let p1 = Point::new(idx1 % w, idx1 / w);
         let p2 = Point::new(idx2 % w, idx2 / w);
